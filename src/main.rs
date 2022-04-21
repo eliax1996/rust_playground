@@ -8,17 +8,17 @@ pub struct Fibonacci {
 
 impl Fibonacci {
     fn thread_local_instance() -> Fibonacci {
-        Fibonacci { memoized: vec![0, 1] }
+        Fibonacci {
+            memoized: vec![0, 1],
+        }
     }
 
     fn fib(&mut self, n: i32) -> i32 {
         fn compute_recoursive(fib_instance: &mut Fibonacci, n: i32) -> i32 {
-            let fib_n1 = match fib_instance
+            let fib_n1 = fib_instance
                 .memoized
-                .get((n - 1) as usize) {
-                Some(memoized) => *memoized,
-                None => fib_instance.fib(n - 1)
-            };
+                .get((n - 1) as usize)
+                .map_or_else(|| { fib_instance.fib(n - 1) }, |memoized| *memoized);
 
             // if you can calculate n-1 you surely have n-2
             let fib = fib_n1 + fib_instance.memoized[(n - 2) as usize];
@@ -27,12 +27,9 @@ impl Fibonacci {
             fib
         }
 
-        let maybe_memoized = self.memoized.get(n as usize);
-
-        match maybe_memoized {
-            Some(ret) => *ret,
-            None => compute_recoursive(self, n)
-        }
+        self.memoized
+            .get(n as usize)
+            .map_or_else(|| { compute_recoursive(self, n) }, |memoized| *memoized)
     }
 }
 
